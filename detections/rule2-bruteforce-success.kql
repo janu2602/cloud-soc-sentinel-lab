@@ -1,0 +1,30 @@
+// Rule 2 - Brute Force: Successful Logon After Failures
+// Severity: High | MITRE ATT&CK: Credential Access - T1110 Brute Force
+// Schedule: run every 5 minutes, look back 1 hour | Alert when results > 0
+// Suppression: 1 hour after an alert fires
+// Entities: Account -> TargetAccount, IP -> IpAddress
+//
+// Fires when an account that had 10+ failed logons (4625) then logs on
+// successfully (4624) during or within 30 minutes after the failure burst.
+//
+// Why it matches on the username instead of TargetAccount:
+// in this lab the failed logons were recorded as "MicrosoftAccount\soclabadmin"
+// but the successful logon as "vm-endpoint\soclabadmin". A join on
+// TargetAccount would never match, so the rule would never fire.
+// tolower(TargetUserName) gives the same key ("soclabadmin") for both.
+//
+// LogonType 3 = network (the RDP/NLA authentication step)
+// LogonType 10 = RemoteInteractive (the RDP desktop session)
+// One RDP sign-in therefore produces two 4624 events.
+
+let failures = SecurityEvent
+| where EventID == 4625
+| summarize Fails = count(), FirstFail = min(TimeGenerated), LastFail = max(TimeGenerated),
+            FailIPs = make_set(IpAddress) by User = tolower(TargetUserName)
+| where Fails >= 10;
+SecurityEvent
+| where EventID == 4624 and LogonType in (3, 10)
+| extend User = tolower(TargetUserName)
+| join kind=inner failures on User
+| where TimeGenerated between (FirstFail .. (LastFail + 30m))
+| project TimeGenerated, TargetAccount, IpAddress, Fails, FirstFail, LastFail, FailIPs

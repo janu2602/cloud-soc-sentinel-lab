@@ -1,0 +1,13 @@
+// Rule 1 - Brute Force: Multiple Failed Logons
+// Severity: Medium | MITRE ATT&CK: Credential Access - T1110 Brute Force
+// Schedule: run every 5 minutes, look back 1 hour | Alert when results > 0
+// Suppression: 1 hour after an alert fires (added after tuning - see report)
+// Entities: Account -> TargetAccount, IP -> IpAddress
+//
+// Fires when one account receives 10 or more failed logons (EventID 4625)
+// from the same source IP within a 15-minute window.
+
+SecurityEvent
+| where EventID == 4625
+| summarize Failures = count() by TargetAccount, IpAddress, bin(TimeGenerated, 15m)
+| where Failures >= 10

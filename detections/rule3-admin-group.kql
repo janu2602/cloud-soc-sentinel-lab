@@ -1,0 +1,28 @@
+// Rule 3 - Privileged Group Membership Change
+// Severity: Medium | MITRE ATT&CK: Persistence - T1098 Account Manipulation
+// Schedule: run every 5 minutes, look back 1 hour | Alert when results > 0
+// Suppression: 1 hour after an alert fires
+// Entity: Account -> SubjectAccount (the account that made the change)
+//
+// 4728 = member added to a security-enabled global group
+// 4732 = member added to a security-enabled local group
+// 4756 = member added to a security-enabled universal group
+//
+// --- Version deployed in the lab ---
+// Finding: this version also fired when "testuser" was added to the normal
+// local Users group (Windows does that automatically when a user is created),
+// not only when it was added to Administrators.
+
+SecurityEvent
+| where EventID in (4728, 4732, 4756)
+| project TimeGenerated, Computer, SubjectAccount, MemberName, MemberSid, GroupName = TargetUserName
+
+// --- Tuned version (recommended) ---
+// Only alert on privileged groups. Uncomment to use instead of the query above.
+//
+// let PrivilegedGroups = dynamic(["Administrators", "Domain Admins", "Enterprise Admins",
+//                                 "Schema Admins", "Remote Desktop Users", "Backup Operators"]);
+// SecurityEvent
+// | where EventID in (4728, 4732, 4756)
+// | where TargetUserName in~ (PrivilegedGroups)
+// | project TimeGenerated, Computer, SubjectAccount, MemberName, MemberSid, GroupName = TargetUserName

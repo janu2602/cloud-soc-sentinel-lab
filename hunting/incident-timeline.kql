@@ -1,0 +1,17 @@
+// Investigation query - full timeline for the soclabadmin brute-force incident
+// Run in Log Analytics (law-soc-lab -> Logs) with Time range = Last 4 hours.
+//
+// 4624 = successful logon, 4625 = failed logon,
+// 4740 = account locked out, 4732 = member added to local group
+
+SecurityEvent
+| where (EventID in (4624, 4625) and TargetUserName =~ "soclabadmin" and LogonType in (3, 10))
+     or EventID in (4740, 4732)
+| project TimeGenerated, EventID, Activity, TargetAccount, IpAddress, LogonType
+| order by TimeGenerated asc
+
+// Quick scope check: how many failures, from where, and was the account locked?
+//
+// SecurityEvent
+// | where EventID in (4625, 4740)
+// | summarize Count = count() by EventID, TargetAccount, IpAddress
