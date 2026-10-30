@@ -78,5 +78,4 @@ My home IP address is redacted in the screenshots and written as 104.53.x.x in t
 
 ## What I learned
 
-<!-- Edit these into your own words before publishing. -->
-The biggest surprise was that a detection can look correct and still never fire: the same account was logged under two different names, so the original join could not match. Testing each rule against real events, not just checking that it saves, is what caught it. I also saw how quickly duplicate alerts pile up when the lookback window is longer than the schedule, which made alert fatigue concrete for me. Next time I would add an alert-grouping strategy and restrict RDP with Just-in-Time access from the start.
+The biggest surprise was that a detection can look correct and still never fire: the same account was logged under two different names, so the original join could not match. Testing each rule against real events, not just checking that it saves, is what caught it. I also saw how quickly duplicate alerts pile up when the lookback window exceeds the schedule, which made alert fatigue feel real. Next time, I would add an alert-grouping strategy and restrict RDP with Just-in-Time access from the start.
